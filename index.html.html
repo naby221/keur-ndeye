@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Keur Ndaay - Supermarché en ligne</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Nunito', sans-serif; }
+    h1, h2, h3 { font-family: 'Playfair Display', serif; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-thumb { background: #16a34a; border-radius: 3px; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes pulse-badge { 0%,100% { transform:scale(1); } 50% { transform:scale(1.2); } }
+    .fade-up { animation: fadeUp 0.6s ease forwards; }
+    .carte-produit { transition: transform 0.3s, box-shadow 0.3s; }
+    .carte-produit:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
+    .badge-panier { animation: pulse-badge 0.4s ease; }
+    .panier-drawer { transition: transform 0.35s cubic-bezier(.4,0,.2,1); }
+    .hero-bg { background: linear-gradient(135deg, #064e3b 0%, #065f46 40%, #16a34a 100%); }
+    .img-produit { width:100%; height:160px; object-fit:cover; border-radius:12px 12px 0 0; }
+    .img-placeholder { width:100%; height:160px; display:flex; align-items:center; justify-content:center; font-size:64px; background:#f0fdf4; border-radius:12px 12px 0 0; }
+    html { scroll-behavior: smooth; }
+    nav { position: sticky; top: 0; z-index: 100; }
+    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(80px); transition:transform 0.4s; z-index:9999; background:#16a34a; color:white; padding:12px 24px; border-radius:999px; font-weight:700; box-shadow:0 8px 32px rgba(0,0,0,0.2); white-space:nowrap; }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* Styles pour les boutons radio de paiement */
+    .paiement-label {
+      transition: all 0.2s;
+      border: 2px solid #e5e7eb;
+    }
+    .paiement-radio:checked + .paiement-label {
+      border-color: #16a34a;
+      background-color: #f0fdf4;
+      box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2);
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+
+<script>
+  (function() {
+    // ==================== BASE DE DONNÉES COMPLÈTE ====================
+    const DB = {
+      jus15L: [
+        { id:"j1",  nom:"Bissap Rouge",    volume:"1,5L", prix:2000, img:"https://i.ibb.co/qYSytbRF/image.jpg" },
+        { id:"j2",  nom:"Gingembre",       volume:"1,5L", prix:2000, img:"https://i.ibb.co/fYHdWBG9/image.jpg" },
+        { id:"j3",  nom:"Ananas",          volume:"1,5L", prix:2000, img:"https://i.ibb.co/8gLVnX0F/image.jpg" },
+        { id:"j4",  nom:"Orange",          volume:"1,5L", prix:2000, img:"https://i.ibb.co/mFqYwR9W/image.jpg" },
+        { id:"j5",  nom:"Bouye Nature",    volume:"1,5L", prix:2000, img:"https://i.ibb.co/fz2k8dSV/image.jpg" },
+        { id:"j6",  nom:"Bouye Fraise",    volume:"1,5L", prix:2000, img:"https://i.ibb.co/RTpbjrr7/image.jpg" },
+        { id:"j7",  nom:"Bouye Caressole", volume:"1,5L", prix:2500, img:"https://i.postimg.cc/CzqQ2pgD/jue-bouye-caressole.jpg" },
+      ],
+      jus1L: [
+        { id:"j8",  nom:"Bissap Rouge",  volume:"1L", prix:1500, img:"https://i.ibb.co/YFg8Hpfk/image.jpg" },
+        { id:"j9",  nom:"Bissap Blanc",  volume:"1L", prix:1500, img:"https://i.ibb.co/F4PrkQn0/image.jpg" },
+        { id:"j10", nom:"Ananas",        volume:"1L", prix:1500, img:"https://i.ibb.co/wZ9XR4mF/image.jpg" },
+        { id:"j11", nom:"Orange",        volume:"1L", prix:1500, img:"https://i.ibb.co/tpJB4WH4/image.jpg" },
+        { id:"j12", nom:"Bouye Nature",  volume:"1L", prix:1500, img:"https://i.ibb.co/cKtCPH0S/image.jpg" },
+        { id:"j13", nom:"Bouye Fraise",  volume:"1L", prix:1500, img:"https://i.ibb.co/SwCcf9bW/image.jpg" },
+        { id:"j14", nom:"Gingembre",     volume:"1L", prix:1500, img:"https://i.ibb.co/vCxXSwk7/image.jpg" },
+      ],
+      parfums: [
+        { id:"p1",  nom:"Royal Oud",     prix:25000, img:"https://i.postimg.cc/KRMHWh25/Oud-royal.jpg" },
+        { id:"p2",  nom:"Amber Night",   prix:30000, img:"https://i.postimg.cc/w7mGrYp1/Amber-night.jpg" },
+        { id:"p3",  nom:"Black Musk",    prix:15000, img:"https://i.postimg.cc/rKrPH2kR/Black-Musk.jpg" },
+        { id:"p4",  nom:"Golden Oud",    prix:20000, img:"https://i.postimg.cc/QHTyzZ3T/Golden-oud.jpg" },
+        { id:"p5",  nom:"White Musk",    prix:35000, img:"https://i.postimg.cc/ZCdMQzSw/white-Musk.jpg" },
+        { id:"p6",  nom:"Luxury Rose",   prix:40000, img:"https://i.postimg.cc/vcVNKws5/luxury-rose.jpg" },
+        { id:"p7",  nom:"Royal Gold",    prix:20000, img:"https://i.postimg.cc/zVgcQYrj/royal-Gold.jpg" },
+        { id:"p8",  nom:"Night Secret",  prix:25000, img:"https://i.postimg.cc/0bwB41sp/night-secret.jpg" },
+        { id:"p9",  nom:"Arabian Dream", prix:15000, img:"https://i.postimg.cc/dLyxfcYT/arabian-dream.jpg" },
+        { id:"p10", nom:"Luxury Oud",    prix:20000, img:"https://i.postimg.cc/XpCzP6bd/luxury-oud.jpg" },
+      ]
+    };
+
+    // ==================== GESTION DU PANIER  ====================
+    let panier = [];
+    try {
+      panier = JSON.parse(localStorage.getItem("keur-ndaay-panier") || "[]");
+    } catch(e) { panier = []; }
+
+    function sauvegarderPanier() {
+      try { localStorage.setItem("keur-ndaay-panier", JSON.stringify(panier)); }
+      catch(e) { console.warn("Impossible de sauvegarder le panier"); }
+    }
+
+    function ajouterAuPanier(id, nom, prix, detail, img) {
+      try {
+        const existant = panier.find(p => p.id === id);
+        if (existant) { existant.qte++; }
+        else { panier.push({ id, nom, prix, detail, img, qte: 1 }); }
+        sauvegarderPanier();
+        mettreAJourUI();
+        afficherPanier();
+        afficherToast("✅ " + nom + " ajouté au panier !");
+      } catch(err) { console.error(err); }
+    }
+
+    function supprimerDuPanier(id) {
+      panier = panier.filter(p => p.id !== id);
+      sauvegarderPanier();
+      mettreAJourUI();
+      afficherPanier();
+    }
+
+    function changerQte(id, delta) {
+      const item = panier.find(p => p.id === id);
+      if (!item) return;
+      item.qte += delta;
+      if (item.qte <= 0) { supprimerDuPanier(id); }
+      else { sauvegarderPanier(); mettreAJourUI(); afficherPanier(); }
+    }
+
+    function totalPanier() {
+      return panier.reduce((s, p) => s + p.prix * p.qte, 0);
+    }
+
+    function nbArticles() {
+      return panier.reduce((s, p) => s + p.qte, 0);
+    }
+
+    function mettreAJourUI() {
+      const nb = nbArticles();
+      document.querySelectorAll(".badge-nb").forEach(b => {
+        b.textContent = nb;
+        b.style.display = nb > 0 ? "flex" : "none";
+        if (nb > 0) {
+          b.classList.remove("badge-panier");
+          void b.offsetWidth;
+          b.classList.add("badge-panier");
+        }
+      });
+      const resume = document.getElementById("resume-nb-articles");
+      if (resume) {
+        resume.textContent = nb > 0
+          ? nb + " article(s) — Total : " + totalPanier().toLocaleString("fr-FR") + " FCFA"
+          : "Panier vide — ajoutez des produits ci-dessus";
+      }
+    }
+
+    function afficherToast(msg) {
+      const t = document.getElementById("toast");
+      if (!t) return;
+      t.textContent = msg;
+      t.classList.add("show");
+      clearTimeout(t._timeout);
+      t._timeout = setTimeout(() => t.classList.remove("show"), 2500);
+    }
+
+    // ==================== AFFICHAGE DES CARTES PRODUITS ====================
+    // ==================== AFFICHAGE DES CARTES PRODUITS ====================
+function carteProduit(p, detailLabel) {
+  return `
+  <div class="carte-produit bg-white rounded-2xl shadow-md overflow-hidden flex flex-col">
+    <div class="relative">
+      <img src="${p.img}" class="img-produit" alt="${p.nom}" loading="lazy" decoding="async"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+      <div class="img-placeholder" style="display:none">${p.nom.charAt(0)}</div>
+    </div>
+    <div class="p-4 flex flex-col flex-1 gap-2">
+      <h3 class="font-bold text-gray-800 text-base leading-tight">${p.nom}</h3>
+      <span class="text-sm text-gray-500">${detailLabel}</span>
+      <div class="mt-auto flex items-center justify-between pt-2">
+        <span class="text-green-700 font-bold text-lg">${p.prix.toLocaleString("fr-FR")} FCFA</span>
+        <button onclick="ajouterAuPanier('${p.id}','${p.nom.replace(/'/g,"\\'")}',${p.prix},'${detailLabel}','${p.img}')"
+          class="bg-green-600 hover:bg-green-700 active:scale-95 text-white text-sm font-bold px-4 py-2 rounded-xl transition-all">
+          🛒 Ajouter
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+    // ==================== AFFICHAGE DU PANIER ====================
+    function afficherPanier() {
+      const liste = document.getElementById("liste-panier");
+      const total = document.getElementById("total-panier");
+      if (!liste || !total) return;
+
+      if (!panier.length) {
+        liste.innerHTML = `<div class="text-center py-16 text-gray-400"><div class="text-5xl mb-3">🛒</div><p class="font-semibold">Votre panier est vide</p></div>`;
+        total.textContent = "0";
+        return;
+      }
+
+      liste.innerHTML = panier.map(p => `
+        <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
+          <img src="${p.img}" class="w-14 h-14 object-cover rounded-xl" loading="lazy" decoding="async"
+            onerror="this.style.display='none'">
+          <div class="flex-1 min-w-0">
+            <div class="font-bold text-sm truncate">${p.nom}</div>
+            <div class="text-xs text-gray-500">${p.detail}</div>
+            <div class="text-green-700 font-bold text-sm">${p.prix.toLocaleString("fr-FR")} FCFA</div>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="changerQte('${p.id}',-1)" class="w-8 h-8 rounded-full bg-red-100 text-red-600 font-bold hover:bg-red-200 transition-colors">−</button>
+            <span class="font-bold w-6 text-center">${p.qte}</span>
+            <button onclick="changerQte('${p.id}',1)"  class="w-8 h-8 rounded-full bg-green-100 text-green-600 font-bold hover:bg-green-200 transition-colors">+</button>
+          </div>
+        </div>`).join("");
+
+      total.textContent = totalPanier().toLocaleString("fr-FR");
+      mettreAJourUI();
+    }
+
+    // ==================== OUVERTURE / FERMETURE PANIER ====================
+    function ouvrirPanier() {
+      afficherPanier();
+      document.getElementById("panier-drawer").style.transform = "translateX(0)";
+      document.getElementById("overlay-panier").style.display = "block";
+    }
+
+    function fermerPanier() {
+      document.getElementById("panier-drawer").style.transform = "translateX(100%)";
+      document.getElementById("overlay-panier").style.display = "none";
+    }
+
+    function viderPanier() {
+      if (!panier.length) return;
+      if (confirm("Vider tout le panier ?")) {
+        panier = [];
+        sauvegarderPanier();
+        mettreAJourUI();
+        afficherPanier();
+      }
+    }
+
+    // ==================== COMMANDE WHATSAPP SÉCURISÉE ====================
+    function commanderWhatsapp() {
+      const nom  = document.getElementById("cmd-nom")?.value.trim();
+      const tel  = document.getElementById("cmd-tel")?.value.trim();
+      const adr  = document.getElementById("cmd-adresse")?.value.trim();
+      const date = document.getElementById("cmd-date")?.value;
+      const heure = document.getElementById("cmd-heure")?.value;
+
+      const paieRadio = document.querySelector('input[name="paiement"]:checked');
+      const paie = paieRadio ? paieRadio.value : "Non précisé";
+
+      if (!nom || !tel || !adr) {
+        alert("⚠️ Remplissez votre nom, téléphone et adresse !");
+        return;
+      }
+      if (!panier.length) {
+        alert("⚠️ Votre panier est vide !");
+        return;
+      }
+
+      let msg = "🛒 *COMMANDE KEUR NDAAY*\n\n";
+      msg += "👤 *Nom :* " + nom + "\n";
+      msg += "📞 *Téléphone :* " + tel + "\n";
+      msg += "📍 *Adresse :* " + adr + "\n";
+      if (date)  msg += "📅 *Date :* " + date + "\n";
+      if (heure) msg += "⏰ *Heure :* " + heure + "\n";
+      msg += "💳 *Paiement :* " + paie + "\n\n";
+      msg += "📦 *ARTICLES :*\n";
+      panier.forEach(p => {
+        msg += "• " + p.nom + " (" + p.detail + ") × " + p.qte + " = " + (p.prix * p.qte).toLocaleString("fr-FR") + " FCFA\n";
+      });
+      msg += "\n🚚 Livraison : 1 000 FCFA\n";
+      msg += "💰 *TOTAL : " + (totalPanier() + 1000).toLocaleString("fr-FR") + " FCFA*\n\n";
+      msg += "Merci ! 🙏";
+
+      const numero = "221776151613";
+      const url = "https://wa.me/" + numero + "?text=" + encodeURIComponent(msg);
+      window.open(url, "_blank", "noopener");
+    }
+
+    // ==================== EXPOSER LES FONCTIONS ====================
+    window.ajouterAuPanier = ajouterAuPanier;
+    window.supprimerDuPanier = supprimerDuPanier;
+    window.changerQte = changerQte;
+    window.ouvrirPanier = ouvrirPanier;
+    window.fermerPanier = fermerPanier;
+    window.viderPanier = viderPanier;
+    window.commanderWhatsapp = commanderWhatsapp;
+
+    // ==================== INITIALISATION ====================
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("grille-jus15").innerHTML = DB.jus15L.map(p => carteProduit(p, p.volume)).join("");
+      document.getElementById("grille-jus1").innerHTML = DB.jus1L.map(p => carteProduit(p, p.volume)).join("");
+      document.getElementById("grille-parfums").innerHTML = DB.parfums.map(p => carteProduit(p, "Disponible sur commande")).join("");
+
+      mettreAJourUI();
+
+      document.getElementById("overlay-panier").addEventListener("click", fermerPanier);
+    });
+  })();
+</script>
+
+<div id="toast" class="toast"></div>
+<div id="overlay-panier" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;"></div>
+
+<!-- DRAWER PANIER -->
+<div id="panier-drawer" class="panier-drawer fixed top-0 right-0 h-full bg-white shadow-2xl flex flex-col" style="width:min(420px,100vw);transform:translateX(100%);z-index:300;">
+  <div class="bg-green-700 text-white px-6 py-4 flex items-center justify-between">
+    <h2 class="text-xl font-bold">🛒 Mon Panier</h2>
+    <button onclick="fermerPanier()" class="text-2xl hover:text-green-200">✕</button>
+  </div>
+  <div id="liste-panier" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3"></div>
+  <div class="border-t p-4 bg-gray-50">
+    <div class="flex justify-between text-sm text-gray-500 mb-2"><span>Sous-total</span><span><span id="total-panier">0</span> FCFA</span></div>
+    <div class="flex justify-between text-sm text-gray-500 mb-4"><span>🚚 Livraison Dakar</span><span class="font-bold text-gray-800">1 000 FCFA</span></div>
+    <button onclick="document.getElementById('section-commande').scrollIntoView({behavior:'smooth'});fermerPanier();"
+      class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-all active:scale-95 mb-2">✅ Passer la commande</button>
+    <button onclick="viderPanier()" class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-2 rounded-xl text-sm">🗑️ Vider le panier</button>
+  </div>
+</div>
+
+<!-- NAVIGATION -->
+<nav class="bg-green-800 text-white shadow-lg">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <span class="text-3xl">🏪</span>
+      <div><h1 class="text-xl font-bold leading-none">Keur Ndaay</h1><p class="text-green-300 text-xs">Supermarché en ligne · Dakar</p></div>
+    </div>
+    <div class="hidden md:flex gap-6 text-sm font-semibold">
+      <a href="#accueil" class="hover:text-yellow-300 transition-colors">Accueil</a>
+      <a href="#jus15"   class="hover:text-yellow-300 transition-colors">Nos Jus</a>
+      <a href="#parfums" class="hover:text-yellow-300 transition-colors">Parfums</a>
+      <a href="#info"    class="hover:text-yellow-300 transition-colors">Infos</a>
+    </div>
+    <button onclick="ouvrirPanier()" class="relative flex items-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-4 py-2 rounded-xl transition-all active:scale-95">
+      🛒 Panier
+      <span class="badge-nb absolute -top-2 -right-2 bg-red-500 text-white text-xs w-6 h-6 rounded-full items-center justify-center font-bold" style="display:none;">0</span>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="accueil" class="hero-bg text-white py-24 px-4 text-center fade-up">
+  <div class="max-w-3xl mx-auto">
+    <div class="text-6xl mb-4">🏪</div>
+    <h1 class="text-5xl font-black mb-4">Supermarché <span class="text-yellow-300">Keur Ndaay</span></h1>
+    <p class="text-xl text-green-200 mb-8">  Jus naturels · Parfums de qualité</p>
+    <div class="flex flex-wrap gap-4 justify-center">
+      <a href="#jus15"   class="bg-yellow-400 hover:bg-yellow-300 text-gray-900 font-bold px-8 py-3 rounded-full transition-all shadow-lg">🍹 Voir nos Jus</a>
+      <a href="#parfums" class="border-2 border-white hover:bg-white hover:text-green-800 text-white font-bold px-8 py-3 rounded-full transition-all">✨ parfums de qualité</a>
+    </div>
+    <div class="mt-16 grid grid-cols-3 gap-6 max-w-lg mx-auto">
+      <div class="bg-white/10 rounded-2xl p-4"><div class="text-3xl font-black text-yellow-300">+14</div><div class="text-sm text-green-200">Variétés de parfums</div></div>
+      <div class="bg-white/10 rounded-2xl p-4"><div class="text-3xl font-black text-yellow-300">+10</div><div class="text-sm text-green-200">jus</div></div>
+            <div class="bg-white/10 rounded-2xl p-4"><div class="text-3xl font-black text-yellow-300">+100</div><div class="text-sm text-green-200">Variétés de produits</div></div>
+
+    </div>
+  </div>
+</section>
+
+<!-- JUS 1.5L -->
+<section id="jus15" class="py-16 px-4 bg-white">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-10">
+      <span class="bg-green-100 text-green-700 text-sm font-bold px-4 py-1 rounded-full">🍹 Jus Naturels</span>
+      <h2 class="text-4xl font-black mt-3 text-gray-800">Nos Jus 1,5L</h2>
+      <p class="text-gray-500 mt-2">Faits maison · Frais · Sans conservateur · <strong class="text-green-600">2 000 FCFA</strong></p>
+    </div>
+    <div id="grille-jus15" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5"></div>
+  </div>
+</section>
+
+<!-- JUS 1L -->
+<section id="jus1" class="py-16 px-4 bg-green-50">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-10">
+      <span class="bg-green-100 text-green-700 text-sm font-bold px-4 py-1 rounded-full">🍹 Jus Naturels</span>
+      <h2 class="text-4xl font-black mt-3 text-gray-800">Nos Jus 1L</h2>
+      <p class="text-gray-500 mt-2">Format pratique · <strong class="text-green-600">1 500 FCFA</strong></p>
+    </div>
+    <div id="grille-jus1" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5"></div>
+  </div>
+</section>
+
+
+<!-- PARFUMS -->
+<section id="parfums" class="py-16 px-4 bg-gray-900 text-white">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-10">
+      <span class="bg-yellow-400 text-gray-900 text-sm font-bold px-4 py-1 rounded-full">✨ Collection Exclusive</span>
+      <h2 class="text-4xl font-black mt-3">Collection Privée — Parfums</h2>
+      <p class="text-gray-400 mt-2">Parfums qui durent 72h · Qualité premium</p>
+    </div>
+    <div id="grille-parfums" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5"></div>
+  </div>
+</section>
+
+<!-- FORMULAIRE DE COMMANDE -->
+<section id="section-commande" class="py-16 px-4 bg-green-50">
+  <div class="max-w-2xl mx-auto">
+    <div class="text-center mb-10">
+      <span class="bg-green-100 text-green-700 text-sm font-bold px-4 py-1 rounded-full">📦 Commander</span>
+      <h2 class="text-4xl font-black mt-3 text-gray-800">Passer une Commande</h2>
+      <p class="text-gray-500 mt-2">Remplissez vos infos · Envoi automatique sur WhatsApp</p>
+    </div>
+    <div class="bg-white rounded-3xl shadow-xl p-8 flex flex-col gap-5">
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-1">👤 Votre nom complet *</label>
+        <input id="cmd-nom" type="text" placeholder="Ex: Fatou Diallo" class="w-full border-2 border-gray-200 focus:border-green-500 rounded-xl px-4 py-3 outline-none transition-colors text-sm">
+      </div>
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-1">📞 Numéro de téléphone *</label>
+        <input id="cmd-tel" type="tel" placeholder="Ex: 77 123 45 67" class="w-full border-2 border-gray-200 focus:border-green-500 rounded-xl px-4 py-3 outline-none transition-colors text-sm">
+      </div>
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-1">📍 Adresse de livraison *</label>
+        <input id="cmd-adresse" type="text" placeholder="Ex: Yoff, près de la mosquée" class="w-full border-2 border-gray-200 focus:border-green-500 rounded-xl px-4 py-3 outline-none transition-colors text-sm">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-1">📅 Date souhaitée</label>
+          <input id="cmd-date" type="date" class="w-full border-2 border-gray-200 focus:border-green-500 rounded-xl px-4 py-3 outline-none transition-colors text-sm">
+        </div>
+        <div>
+          <label class="block text-sm font-bold text-gray-700 mb-1">⏰ Heure souhaitée</label>
+          <input id="cmd-heure" type="time" class="w-full border-2 border-gray-200 focus:border-green-500 rounded-xl px-4 py-3 outline-none transition-colors text-sm">
+        </div>
+      </div>
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-3">💳 Mode de paiement</label>
+        <div class="grid grid-cols-3 gap-3">
+          <!-- Wave -->
+          <input type="radio" id="paiement-wave" name="paiement" value="Wave" class="paiement-radio sr-only">
+          <label for="paiement-wave" class="paiement-label flex flex-col items-center gap-2 rounded-xl p-3 cursor-pointer">
+            <img src="https://i.postimg.cc/8P7jnNcg/telechargement.png" class="w-10 h-10 object-contain rounded" alt="wave">
+            <span class="text-sm font-bold text-gray-700">Wave</span>
+          </label>
+          <!-- Orange Money -->
+          <input type="radio" id="paiement-om" name="paiement" value="Orange Money" class="paiement-radio sr-only">
+          <label for="paiement-om" class="paiement-label flex flex-col items-center gap-2 rounded-xl p-3 cursor-pointer">
+            <img src="https://i.postimg.cc/kVxZh5jX/om.png" class="w-10 h-10 object-contain rounded" >
+            <span class="text-sm font-bold text-gray-700">Orange Money</span>
+          </label>
+          <!-- Yas -->
+          <input type="radio" id="paiement-yas" name="paiement" value="Yas" class="paiement-radio sr-only">
+          <label for="paiement-yas" class="paiement-label flex flex-col items-center gap-2 rounded-xl p-3 cursor-pointer">
+            <span class="text-3xl">🫱🏿‍🫲🏾</span><span class="text-sm font-bold text-gray-700">espéces</span>
+          </label>
+        </div>
+      </div>
+      <div class="bg-green-50 rounded-2xl p-4 border border-green-200">
+        <div class="flex justify-between items-center">
+          <span class="font-bold text-gray-700">🛒 Articles dans le panier</span>
+          <button onclick="ouvrirPanier()" type="button" class="text-green-600 text-sm font-bold hover:underline">Voir / Modifier</button>
+        </div>
+        <div class="text-sm text-gray-500 mt-1" id="resume-nb-articles">Panier vide — ajoutez des produits ci-dessus</div>
+      </div>
+      <button onclick="commanderWhatsapp()" type="button"
+        class="w-full bg-green-600 hover:bg-green-700 active:scale-95 text-white font-bold text-lg py-4 rounded-2xl transition-all shadow-lg flex items-center justify-center gap-3">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Envoyer sur WhatsApp
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- INFOS -->
+<section id="info" class="py-16 px-4 bg-white">
+  <div class="max-w-6xl mx-auto">
+    <div class="text-center mb-10"><h2 class="text-4xl font-black text-gray-800">Pourquoi choisir Keur Ndaay ?</h2></div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="bg-green-50 border border-green-200 rounded-2xl p-6">
+        <div class="text-4xl mb-3">🚚</div><h3 class="text-xl font-bold mb-2">Livraison Rapide</h3>
+        <ul class="text-sm text-gray-600 space-y-1"><li>✅ Livraison à Dakar</li><li>✅ Top chrono à votre porte</li><li>✅ Frais : 1 000 FCFA seulement</li></ul>
+      </div>
+      <div class="bg-green-50 border border-green-200 rounded-2xl p-6">
+        <div class="text-4xl mb-3">🌿</div><h3 class="text-xl font-bold mb-2">Produits Frais</h3>
+        <ul class="text-sm text-gray-600 space-y-1"><li>✅ Jus naturels faits maison</li><li>✅ Légumes frais du marché</li><li>✅ Poisson et poulet de qualité</li><li>✅ Parfums qui durent 72h</li><li>✅ À Yoff, près de la boutique Maboule</li></ul>
+      </div>
+      <div class="bg-green-50 border border-green-200 rounded-2xl p-6">
+        <div class="text-4xl mb-3">🔒</div><h3 class="text-xl font-bold mb-2">Paiement Sécurisé</h3>
+        <ul class="text-sm text-gray-600 space-y-1"><li> Wave</li><li> Orange Money</li></ul>
+      </div>
+      <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-6">
+        <div class="text-4xl mb-3">📞</div><h3 class="text-xl font-bold mb-2">Contact</h3>
+        <p class="font-bold text-gray-800 text-lg mb-3">77 415 83 71</p>
+        <a href="https://wa.me/221774158371" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold px-5 py-2 rounded-xl text-sm">💬 WhatsApp</a>
+      </div>
+      <div class="bg-yellow-50 border border-yellow-200 rounded-2xl p-6 sm:col-span-2">
+        <div class="text-4xl mb-3">⭐</div><h3 class="text-xl font-bold mb-3">Avis de nos Clients</h3>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-white rounded-xl p-3 text-sm text-gray-600 italic border border-yellow-100">"Produits très frais et livraison rapide." ⭐⭐⭐⭐⭐</div>
+          <div class="bg-white rounded-xl p-3 text-sm text-gray-600 italic border border-yellow-100">"Les jus sont délicieux !" ⭐⭐⭐⭐⭐</div>
+          <div class="bg-white rounded-xl p-3 text-sm text-gray-600 italic border border-yellow-100">"Service très professionnel." ⭐⭐⭐⭐⭐</div>
+          <div class="bg-white rounded-xl p-3 text-sm text-gray-600 italic border border-yellow-100">"Les parfums sont de très bonne qualité !" ⭐⭐⭐⭐⭐</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-gray-900 text-white py-12 px-4">
+  <div class="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-8">
+    <div class="col-span-2 sm:col-span-1">
+      <div class="flex items-center gap-2 mb-3"><span class="text-2xl">🏪</span><h3 class="font-black text-xl">Keur Ndaay</h3></div>
+      <p class="text-gray-400 text-sm">Votre supermarché en ligne au Sénégal.</p>
+    </div>
+    <div>
+      <h3 class="font-bold mb-3 text-yellow-400">Navigation</h3>
+      <ul class="text-gray-400 text-sm space-y-2">
+        <li><a href="#accueil" class="hover:text-white">Accueil</a></li>
+        <li><a href="#jus15"   class="hover:text-white">Nos Jus</a></li>
+        <li><a href="#parfums" class="hover:text-white">Collection Parfums</a></li>
+      </ul>
+    </div>
+    <div>
+      <h3 class="font-bold mb-3 text-yellow-400">Horaires</h3>
+      <ul class="text-gray-400 text-sm space-y-2"><li>🕗 Lun – Sam : 08h – 22h</li><li>🕙 Dimanche : 10h – 20h</li></ul>
+    </div>
+    <div>
+      <h3 class="font-bold mb-3 text-yellow-400">Contact</h3>
+      <ul class="text-gray-400 text-sm space-y-2"><li>📱 77 615 16 13</li><li> Wave ·  Orange Money</li><li>📍 Dakar – Sénégal</li></ul>
+    </div>
+  </div>
+  <div class="border-t border-gray-800 mt-8 pt-6 text-center text-gray-500 text-sm">© 2026 Keur Ndaay — Tous droits réservés</div>
+</footer>
+
+</body>
+</html>

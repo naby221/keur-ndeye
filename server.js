@@ -9,20 +9,21 @@ app.use(express.json());
 // Connexion MongoDB
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connecté'))
-  .catch(err => console.log(err));
+  .catch(err => console.log('Erreur MongoDB:', err));
 
 // Modèle Produit
-const Produit = mongoose.model('Produit', {
+const produitSchema = new mongoose.Schema({
   nom: String,
   categorie: String,
   prix: Number,
   volume: String,
   image: String,
-  actif: { type: Boolean, default: true }
+  actif: Boolean
 });
+const Produit = mongoose.model('Produit', produitSchema);
 
 // Modèle Commande
-const Commande = mongoose.model('Commande', {
+const commandeSchema = new mongoose.Schema({
   client: {
     nom: String,
     telephone: String,
@@ -35,21 +36,34 @@ const Commande = mongoose.model('Commande', {
   statut: { type: String, default: 'en_attente' },
   date: { type: Date, default: Date.now }
 });
+const Commande = mongoose.model('Commande', commandeSchema);
 
 // Routes API
 app.get('/api/produits', async (req, res) => {
-  const produits = await Produit.find({ actif: true });
-  res.json(produits);
+  try {
+    const produits = await Produit.find({ actif: true });
+    res.json(produits);
+  } catch(err) {
+    res.json([]);
+  }
 });
 
 app.post('/api/commandes', async (req, res) => {
-  const commande = await Commande.create(req.body);
-  res.json(commande);
+  try {
+    const commande = await Commande.create(req.body);
+    res.json(commande);
+  } catch(err) {
+    res.status(500).json({ error: 'Erreur' });
+  }
 });
 
 app.get('/api/commandes', async (req, res) => {
-  const commandes = await Commande.find().sort({ date: -1 });
-  res.json(commandes);
+  try {
+    const commandes = await Commande.find().sort({ date: -1 });
+    res.json(commandes);
+  } catch(err) {
+    res.json([]);
+  }
 });
 
 app.get('/', (req, res) => {

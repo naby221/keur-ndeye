@@ -22,6 +22,9 @@ const produitSchema = new mongoose.Schema({
 });
 const Produit = mongoose.model('Produit', produitSchema);
 
+// Collection explicite
+const Produit = mongoose.model('Produit', produitSchema, 'produits');
+
 // Modèle Commande
 const commandeSchema = new mongoose.Schema({
   client: {

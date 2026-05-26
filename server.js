@@ -8,57 +8,21 @@ app.use(express.json());
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connecté'))
-  .catch(err => console.log('Erreur MongoDB:', err));
+  .catch(err => console.log('Erreur:', err));
 
-const produitSchema = new mongoose.Schema({
-  nom: String,
-  categorie: String,
-  prix: Number,
-  volume: String,
-  image: String,
-  actif: Boolean
-});
+const produitSchema = new mongoose.Schema({}, { collection: 'produits', strict: false });
+const commandeSchema = new mongoose.Schema({}, { collection: 'commandes', strict: false });
 
-const commandeSchema = new mongoose.Schema({
-  client: {
-    nom: String,
-    telephone: String,
-    adresse: String
-  },
-  articles: Array,
-  total: Number,
-  livraison: Number,
-  paiement: String,
-  statut: { type: String, default: 'en_attente' },
-  date: { type: Date, default: Date.now }
-});
-
-const Produit = mongoose.model('Produit', produitSchema, 'produits');
-const Commande = mongoose.model('Commande', commandeSchema, 'commandes');
+const Produit = mongoose.model('Produit', produitSchema);
+const Commande = mongoose.model('Commande', commandeSchema);
 
 app.get('/api/produits', async (req, res) => {
   try {
     const produits = await Produit.find({ actif: true });
+    console.log('Produits trouvés:', produits.length);
     res.json(produits);
   } catch(err) {
-    res.json([]);
-  }
-});
-
-app.post('/api/commandes', async (req, res) => {
-  try {
-    const commande = await Commande.create(req.body);
-    res.json(commande);
-  } catch(err) {
-    res.status(500).json({ error: 'Erreur' });
-  }
-});
-
-app.get('/api/commandes', async (req, res) => {
-  try {
-    const commandes = await Commande.find().sort({ date: -1 });
-    res.json(commandes);
-  } catch(err) {
+    console.log('Erreur produits:', err.message);
     res.json([]);
   }
 });
@@ -68,4 +32,4 @@ app.get('/', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log('Serveur démarré sur le port ' + PORT));
+app.listen(PORT, () => console.log('Serveur sur port ' + PORT));

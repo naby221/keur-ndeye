@@ -1,4 +1,3 @@
-
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -7,12 +6,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Connexion MongoDB
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('MongoDB connecté'))
   .catch(err => console.log('Erreur MongoDB:', err));
 
-// Modèle Produit
 const produitSchema = new mongoose.Schema({
   nom: String,
   categorie: String,
@@ -21,12 +18,7 @@ const produitSchema = new mongoose.Schema({
   image: String,
   actif: Boolean
 });
-const Produit = mongoose.model('Produit', produitSchema);
 
-// Collection explicite
-const Produit = mongoose.model('Produit', produitSchema, 'produits');
-
-// Modèle Commande
 const commandeSchema = new mongoose.Schema({
   client: {
     nom: String,
@@ -40,9 +32,10 @@ const commandeSchema = new mongoose.Schema({
   statut: { type: String, default: 'en_attente' },
   date: { type: Date, default: Date.now }
 });
-const Commande = mongoose.model('Commande', commandeSchema);
 
-// Routes API
+const Produit = mongoose.model('Produit', produitSchema, 'produits');
+const Commande = mongoose.model('Commande', commandeSchema, 'commandes');
+
 app.get('/api/produits', async (req, res) => {
   try {
     const produits = await Produit.find({ actif: true });

@@ -42,7 +42,7 @@ app.get('/', (req, res) => {
 
 app.get('/api/produits', async (req, res) => {
   try {
-    const produits = await Produit.find({ actif: true });
+    const produits = await Produit.find();
     res.json(produits);
   } catch (err) {
     console.log(err);

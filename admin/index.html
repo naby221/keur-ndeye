@@ -12,8 +12,9 @@
 
   <!-- LOGIN -->
   <div id="login-page" class="min-h-screen flex items-center justify-center">
+    
     <div class="bg-white p-8 rounded-2xl shadow-lg w-96">
-      
+
       <h1 class="text-2xl font-black text-green-700 mb-6 text-center">
         🔐 Keur Ndaay
       </h1>
@@ -33,6 +34,7 @@
       </button>
 
     </div>
+
   </div>
 
   <!-- DASHBOARD -->
@@ -40,7 +42,10 @@
 
     <!-- HEADER -->
     <div class="bg-green-800 text-white p-4 flex justify-between items-center">
-      <h1 class="text-xl font-black">📊 Keur Ndaay</h1>
+
+      <h1 class="text-xl font-black">
+        📊 Keur Ndaay
+      </h1>
 
       <button
         onclick="logout()"
@@ -48,6 +53,7 @@
       >
         Déconnexion
       </button>
+
     </div>
 
     <!-- CONTENT -->
@@ -96,15 +102,18 @@
       </div>
 
     </div>
+
   </div>
 
 <script>
 
-  // 🔥 REMPLACE PAR TON VRAI LIEN RAILWAY
-  const API = 'https://TON-PROJET.up.railway.app/api';
+  // 🔥 TON API RAILWAY
+  const API = 'https://keur-ndaay-api-production.up.railway.app/api';
 
+  // 🔐 MOT DE PASSE ADMIN
   const PASSWORD = 'keur2025';
 
+  // LOGIN
   function login() {
 
     const mdp = document.getElementById('password').value;
@@ -124,6 +133,7 @@
     }
   }
 
+  // LOGOUT
   function logout() {
 
     document.getElementById('dashboard').classList.add('hidden');
@@ -134,15 +144,20 @@
 
   }
 
+  // CHARGER DASHBOARD
   async function chargerDashboard() {
 
     try {
 
+      // FETCH API
       const produits = await fetch(API + '/produits')
         .then(res => res.json());
 
       const commandes = await fetch(API + '/commandes')
         .then(res => res.json());
+
+      console.log('Produits:', produits);
+      console.log('Commandes:', commandes);
 
       // STATS
       document.getElementById('nb-produits').textContent =
@@ -164,24 +179,26 @@
       document.getElementById('commandes-jour').textContent =
         commandesJour.length;
 
-      // PRODUITS
+      // LISTE PRODUITS
       document.getElementById('liste-produits').innerHTML =
 
         produits.map(p => `
 
-          <div class="flex justify-between items-center border-b pb-2">
+          <div class="flex justify-between items-center border-b pb-3">
 
             <div>
-              <div class="font-bold">
+
+              <div class="font-bold text-lg">
                 ${p.nom || 'Produit'}
               </div>
 
               <div class="text-sm text-gray-500">
                 ${p.categorie || ''}
               </div>
+
             </div>
 
-            <div class="text-green-700 font-bold">
+            <div class="text-green-700 font-bold text-lg">
               ${(p.prix || 0).toLocaleString()} FCFA
             </div>
 
@@ -189,30 +206,30 @@
 
         `).join('');
 
-      // COMMANDES
+      // LISTE COMMANDES
       document.getElementById('liste-commandes').innerHTML =
 
         commandes.slice(0, 10).map(c => `
 
-          <div class="border-b pb-3">
+          <div class="border-b pb-4">
 
             <div class="font-bold text-lg">
               ${c.client?.nom || 'Client'}
             </div>
 
-            <div class="text-sm text-gray-500 mb-1">
+            <div class="text-sm text-gray-500 mb-2">
               ${c.articles?.map(a => a.nom).join(', ') || ''}
             </div>
 
             <div class="flex justify-between items-center">
 
-              <span class="font-bold text-green-700">
+              <div class="text-green-700 font-bold">
                 ${(c.total || 0).toLocaleString()} FCFA
-              </span>
+              </div>
 
-              <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+              <div class="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full">
                 ${c.statut || 'En attente'}
-              </span>
+              </div>
 
             </div>
 
@@ -224,7 +241,7 @@
 
       console.error(err);
 
-      alert('Erreur connexion API');
+      alert('❌ Erreur connexion API');
 
     }
   }

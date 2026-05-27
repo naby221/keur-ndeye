@@ -1,100 +1,235 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Keur Ndaay - Admin</title>
+
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-gray-100">
 
   <!-- LOGIN -->
   <div id="login-page" class="min-h-screen flex items-center justify-center">
     <div class="bg-white p-8 rounded-2xl shadow-lg w-96">
-      <h1 class="text-2xl font-black text-green-700 mb-6 text-center">🔐 Keur Ndaay</h1>
-      <input id="password" type="password" placeholder="Mot de passe" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 mb-4 text-center text-lg">
-      <button onclick="login()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl">Connexion</button>
+      
+      <h1 class="text-2xl font-black text-green-700 mb-6 text-center">
+        🔐 Keur Ndaay
+      </h1>
+
+      <input
+        id="password"
+        type="password"
+        placeholder="Mot de passe"
+        class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 mb-4 text-center text-lg"
+      />
+
+      <button
+        onclick="login()"
+        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl"
+      >
+        Connexion
+      </button>
+
     </div>
   </div>
 
-  <!-- DASHBOARD (caché au début) -->
+  <!-- DASHBOARD -->
   <div id="dashboard" class="min-h-screen hidden">
+
+    <!-- HEADER -->
     <div class="bg-green-800 text-white p-4 flex justify-between items-center">
       <h1 class="text-xl font-black">📊 Keur Ndaay</h1>
-      <button onclick="logout()" class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-sm font-bold">Déconnexion</button>
+
+      <button
+        onclick="logout()"
+        class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-sm font-bold"
+      >
+        Déconnexion
+      </button>
     </div>
+
+    <!-- CONTENT -->
     <div class="max-w-6xl mx-auto p-6">
-      
+
       <!-- STATS -->
-      <div class="grid grid-cols-3 gap-5 mb-8">
-        <div class="bg-white rounded-2xl p-5 shadow"><div class="text-gray-400 text-sm">Total commandes</div><div class="text-3xl font-black text-green-700" id="total-commandes">-</div></div>
-        <div class="bg-white rounded-2xl p-5 shadow"><div class="text-gray-400 text-sm">Aujourd'hui</div><div class="text-3xl font-black text-green-700" id="commandes-jour">-</div></div>
-        <div class="bg-white rounded-2xl p-5 shadow"><div class="text-gray-400 text-sm">Produits actifs</div><div class="text-3xl font-black text-green-700" id="nb-produits">-</div></div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+
+        <div class="bg-white rounded-2xl p-5 shadow">
+          <div class="text-gray-400 text-sm">Total commandes</div>
+          <div id="total-commandes" class="text-3xl font-black text-green-700">0</div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 shadow">
+          <div class="text-gray-400 text-sm">Aujourd'hui</div>
+          <div id="commandes-jour" class="text-3xl font-black text-green-700">0</div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 shadow">
+          <div class="text-gray-400 text-sm">Produits actifs</div>
+          <div id="nb-produits" class="text-3xl font-black text-green-700">0</div>
+        </div>
+
       </div>
 
       <!-- PRODUITS -->
       <div class="bg-white rounded-2xl p-5 shadow mb-8">
-        <h2 class="text-xl font-bold mb-4">🍹 Produits</h2>
+
+        <h2 class="text-xl font-bold mb-4">
+          🍹 Produits
+        </h2>
+
         <div id="liste-produits" class="space-y-3"></div>
+
       </div>
 
       <!-- COMMANDES -->
       <div class="bg-white rounded-2xl p-5 shadow">
-        <h2 class="text-xl font-bold mb-4">📦 Dernières commandes</h2>
+
+        <h2 class="text-xl font-bold mb-4">
+          📦 Dernières commandes
+        </h2>
+
         <div id="liste-commandes" class="space-y-3"></div>
+
       </div>
 
     </div>
   </div>
 
 <script>
-const API = 'https://keur-ndaay-api.onrender.com/api';
-const PASSWORD = 'keur2025';
 
-function login() {
-  if (document.getElementById('password').value === PASSWORD) {
-    document.getElementById('login-page').classList.add('hidden');
-    document.getElementById('dashboard').classList.remove('hidden');
-    chargerDashboard();
-  } else {
-    alert('Mot de passe incorrect');
+  // 🔥 REMPLACE PAR TON VRAI LIEN RAILWAY
+  const API = 'https://TON-PROJET.up.railway.app/api';
+
+  const PASSWORD = 'keur2025';
+
+  function login() {
+
+    const mdp = document.getElementById('password').value;
+
+    if (mdp === PASSWORD) {
+
+      document.getElementById('login-page').classList.add('hidden');
+
+      document.getElementById('dashboard').classList.remove('hidden');
+
+      chargerDashboard();
+
+    } else {
+
+      alert('Mot de passe incorrect');
+
+    }
   }
-}
 
-function logout() {
-  document.getElementById('dashboard').classList.add('hidden');
-  document.getElementById('login-page').classList.remove('hidden');
-  document.getElementById('password').value = '';
-}
+  function logout() {
 
-async function chargerDashboard() {
-  try {
-    const produits = await fetch(API + '/produits').then(r => r.json());
-    const commandes = await fetch(API + '/commandes').then(r => r.json());
-    
-    document.getElementById('nb-produits').textContent = produits.length;
-    document.getElementById('total-commandes').textContent = commandes.length;
-    
-    const aujourdhui = new Date().toDateString();
-    document.getElementById('commandes-jour').textContent = 
-      commandes.filter(c => new Date(c.date).toDateString() === aujourdhui).length;
-    
-    document.getElementById('liste-produits').innerHTML = produits.map(p => `
-      <div class="flex justify-between items-center border-b pb-2">
-        <span>${p.nom} - ${p.prix.toLocaleString()} FCFA</span>
-        <span class="text-sm text-gray-500">${p.categorie}</span>
-      </div>`).join('');
-    
-    document.getElementById('liste-commandes').innerHTML = commandes.slice(0, 10).map(c => `
-      <div class="border-b pb-2">
-        <div class="font-bold">${c.client.nom} - ${c.total.toLocaleString()} FCFA</div>
-        <div class="text-sm text-gray-500">${c.articles.map(a => a.nom).join(', ')}</div>
-        <div class="text-xs text-green-600">${c.statut} - ${new Date(c.date).toLocaleDateString('fr-FR')}</div>
-      </div>`).join('');
-  } catch(e) {
-    console.error(e);
+    document.getElementById('dashboard').classList.add('hidden');
+
+    document.getElementById('login-page').classList.remove('hidden');
+
+    document.getElementById('password').value = '';
+
   }
-}
+
+  async function chargerDashboard() {
+
+    try {
+
+      const produits = await fetch(API + '/produits')
+        .then(res => res.json());
+
+      const commandes = await fetch(API + '/commandes')
+        .then(res => res.json());
+
+      // STATS
+      document.getElementById('nb-produits').textContent =
+        produits.length;
+
+      document.getElementById('total-commandes').textContent =
+        commandes.length;
+
+      const aujourdHui = new Date().toDateString();
+
+      const commandesJour = commandes.filter(c => {
+
+        if (!c.date) return false;
+
+        return new Date(c.date).toDateString() === aujourdHui;
+
+      });
+
+      document.getElementById('commandes-jour').textContent =
+        commandesJour.length;
+
+      // PRODUITS
+      document.getElementById('liste-produits').innerHTML =
+
+        produits.map(p => `
+
+          <div class="flex justify-between items-center border-b pb-2">
+
+            <div>
+              <div class="font-bold">
+                ${p.nom || 'Produit'}
+              </div>
+
+              <div class="text-sm text-gray-500">
+                ${p.categorie || ''}
+              </div>
+            </div>
+
+            <div class="text-green-700 font-bold">
+              ${(p.prix || 0).toLocaleString()} FCFA
+            </div>
+
+          </div>
+
+        `).join('');
+
+      // COMMANDES
+      document.getElementById('liste-commandes').innerHTML =
+
+        commandes.slice(0, 10).map(c => `
+
+          <div class="border-b pb-3">
+
+            <div class="font-bold text-lg">
+              ${c.client?.nom || 'Client'}
+            </div>
+
+            <div class="text-sm text-gray-500 mb-1">
+              ${c.articles?.map(a => a.nom).join(', ') || ''}
+            </div>
+
+            <div class="flex justify-between items-center">
+
+              <span class="font-bold text-green-700">
+                ${(c.total || 0).toLocaleString()} FCFA
+              </span>
+
+              <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                ${c.statut || 'En attente'}
+              </span>
+
+            </div>
+
+          </div>
+
+        `).join('');
+
+    } catch (err) {
+
+      console.error(err);
+
+      alert('Erreur connexion API');
+
+    }
+  }
+
 </script>
+
 </body>
 </html>

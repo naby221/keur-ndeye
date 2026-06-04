@@ -230,7 +230,7 @@ function carteProduit(p, detailLabel) {
     }
 
     // ==================== COMMANDE WHATSAPP SÉCURISÉE ====================
-    function commanderWhatsapp() {
+    async function commanderWhatsapp() {
       const nom  = document.getElementById("cmd-nom")?.value.trim();
       const tel  = document.getElementById("cmd-tel")?.value.trim();
       const adr  = document.getElementById("cmd-adresse")?.value.trim();
@@ -263,6 +263,24 @@ function carteProduit(p, detailLabel) {
       msg += "\n🚚 Livraison : 1 000 FCFA\n";
       msg += "💰 *TOTAL : " + (totalPanier() + 1000).toLocaleString("fr-FR") + " FCFA*\n\n";
       msg += "Merci ! 🙏";
+
+      await fetch('https://keur-ndeye-production-cb90.up.railway.app/api/commandes', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    client: {
+      nom,
+      telephone: tel,
+      adresse: adr
+    },
+    articles: panier,
+    total: totalPanier() + 1000,
+    statut: 'Nouvelle',
+    date: new Date()
+  })
+});
 
       const numero = "221776151613";
       const url = "https://wa.me/" + numero + "?text=" + encodeURIComponent(msg);

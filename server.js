@@ -56,6 +56,7 @@ app.get('/api/produits', async (req, res) => {
   }
 });
 
+
 app.post('/api/produits', async (req, res) => {
   try {
     const produit = await Produit.create(req.body);
@@ -71,6 +72,24 @@ app.post('/api/produits', async (req, res) => {
       success: false,
       message: err.message
     });
+  }
+});
+
+app.post('/api/produits', async (req, res) => {
+  try {
+
+    const produit = await Produit.create(req.body);
+
+    res.json(produit);
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      message: err.message
+    });
+
   }
 });
 
@@ -188,6 +207,32 @@ app.delete('/api/commandes/:id', async (req, res) => {
 
     res.json({
       success: true
+    });
+
+  } catch (err) {
+
+    console.log(err);
+
+    res.status(500).json({
+      success: false,
+      message: err.message
+    });
+
+  }
+});
+
+app.put('/api/produits/:id', async (req, res) => {
+  try {
+
+    const produit = await Produit.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      produit
     });
 
   } catch (err) {

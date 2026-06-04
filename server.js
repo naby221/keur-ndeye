@@ -44,6 +44,7 @@ app.get('/', (req, res) => {
    PRODUITS
 ========================== */
 
+// Voir tous les produits
 app.get('/api/produits', async (req, res) => {
   try {
     const produits = await Produit.find();
@@ -56,7 +57,7 @@ app.get('/api/produits', async (req, res) => {
   }
 });
 
-
+// Ajouter un produit
 app.post('/api/produits', async (req, res) => {
   try {
     const produit = await Produit.create(req.body);
@@ -75,24 +76,7 @@ app.post('/api/produits', async (req, res) => {
   }
 });
 
-app.post('/api/produits', async (req, res) => {
-  try {
-
-    const produit = await Produit.create(req.body);
-
-    res.json(produit);
-
-  } catch (err) {
-
-    console.log(err);
-
-    res.status(500).json({
-      message: err.message
-    });
-
-  }
-});
-
+// Modifier un produit
 app.put('/api/produits/:id', async (req, res) => {
   try {
     const produit = await Produit.findByIdAndUpdate(
@@ -115,12 +99,14 @@ app.put('/api/produits/:id', async (req, res) => {
   }
 });
 
+// Supprimer un produit
 app.delete('/api/produits/:id', async (req, res) => {
   try {
     await Produit.findByIdAndDelete(req.params.id);
 
     res.json({
-      success: true
+      success: true,
+      message: 'Produit supprimé'
     });
   } catch (err) {
     console.log(err);
@@ -136,6 +122,7 @@ app.delete('/api/produits/:id', async (req, res) => {
    COMMANDES
 ========================== */
 
+// Voir toutes les commandes
 app.get('/api/commandes', async (req, res) => {
   try {
     const commandes = await Commande.find().sort({
@@ -152,31 +139,28 @@ app.get('/api/commandes', async (req, res) => {
   }
 });
 
+// Ajouter une commande
 app.post('/api/commandes', async (req, res) => {
   try {
-
     const commande = await Commande.create(req.body);
 
     res.json({
       success: true,
       commande
     });
-
   } catch (err) {
-
     console.log(err);
 
     res.status(500).json({
       success: false,
       message: err.message
     });
-
   }
 });
 
+// Modifier une commande (statut)
 app.put('/api/commandes/:id', async (req, res) => {
   try {
-
     const commande = await Commande.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -187,63 +171,32 @@ app.put('/api/commandes/:id', async (req, res) => {
       success: true,
       commande
     });
-
   } catch (err) {
-
     console.log(err);
 
     res.status(500).json({
       success: false,
       message: err.message
     });
-
   }
 });
 
+// Supprimer une commande
 app.delete('/api/commandes/:id', async (req, res) => {
   try {
-
     await Commande.findByIdAndDelete(req.params.id);
 
     res.json({
-      success: true
-    });
-
-  } catch (err) {
-
-    console.log(err);
-
-    res.status(500).json({
-      success: false,
-      message: err.message
-    });
-
-  }
-});
-
-app.put('/api/produits/:id', async (req, res) => {
-  try {
-
-    const produit = await Produit.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
-
-    res.json({
       success: true,
-      produit
+      message: 'Commande supprimée'
     });
-
   } catch (err) {
-
     console.log(err);
 
     res.status(500).json({
       success: false,
       message: err.message
     });
-
   }
 });
 

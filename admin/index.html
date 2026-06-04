@@ -108,7 +108,7 @@
 <script>
 
   // 🔥 TON API RAILWAY
-  const API = 'https://keur-ndeye-production-cb90.up.railway.app/api';
+  const API = 'https://keur-ndeye-production-cb90.up.railway.app';
 
   // 🔐 MOT DE PASSE ADMIN
   const PASSWORD = 'keur2025';
@@ -150,10 +150,10 @@
     try {
 
       // FETCH API
-      const produits = await fetch(API + '/produits')
+      const produits = await fetch(API + '/api/produits')
   .then(res => res.json());
 
-const commandes = await fetch(API + '/commandes')
+const commandes = await fetch(API + '/api/commandes')
   .then(res => res.json());
       
       console.log('Produits:', produits);

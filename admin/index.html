@@ -1,250 +1,240 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Keur Ndaay - Admin</title>
-
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin - Keur Ndaay</title>
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gray-100">
 
-  <!-- LOGIN -->
-  <div id="login-page" class="min-h-screen flex items-center justify-center">
-    
-    <div class="bg-white p-8 rounded-2xl shadow-lg w-96">
+<div class="max-w-6xl mx-auto p-6">
 
-      <h1 class="text-2xl font-black text-green-700 mb-6 text-center">
-        🔐 Keur Ndaay
-      </h1>
+  <!-- HEADER -->
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">📊 Dashboard Admin</h1>
+  </div>
 
-      <input
-        id="password"
-        type="password"
-        placeholder="Mot de passe"
-        class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 mb-4 text-center text-lg"
-      />
+  <!-- ================= PRODUITS ================= -->
+  <div class="bg-white p-4 rounded shadow mb-6">
 
-      <button
-        onclick="login()"
-        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl"
-      >
-        Connexion
+    <h2 class="text-xl font-bold mb-3">🍹 Produits</h2>
+
+    <!-- SEARCH -->
+    <input id="search" oninput="load()" placeholder="Rechercher produit..."
+      class="border p-2 w-full mb-3 rounded">
+
+    <!-- ADD PRODUCT -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4">
+
+      <input id="nom" placeholder="Nom" class="border p-2 rounded">
+      <input id="prix" placeholder="Prix" class="border p-2 rounded">
+      <input id="categorie" placeholder="Catégorie" class="border p-2 rounded">
+      <input id="image" placeholder="URL Image" class="border p-2 rounded">
+
+      <button onclick="addProduct()" class="bg-green-600 text-white rounded p-2">
+        Ajouter
       </button>
 
     </div>
 
-  </div>
-
-  <!-- DASHBOARD -->
-  <div id="dashboard" class="min-h-screen hidden">
-
-    <!-- HEADER -->
-    <div class="bg-green-800 text-white p-4 flex justify-between items-center">
-
-      <h1 class="text-xl font-black">
-        📊 Keur Ndaay
-      </h1>
-
-      <button
-        onclick="logout()"
-        class="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-sm font-bold"
-      >
-        Déconnexion
-      </button>
-
-    </div>
-
-    <!-- CONTENT -->
-    <div class="max-w-6xl mx-auto p-6">
-
-      <!-- STATS -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-
-        <div class="bg-white rounded-2xl p-5 shadow">
-          <div class="text-gray-400 text-sm">Total commandes</div>
-          <div id="total-commandes" class="text-3xl font-black text-green-700">0</div>
-        </div>
-
-        <div class="bg-white rounded-2xl p-5 shadow">
-          <div class="text-gray-400 text-sm">Aujourd'hui</div>
-          <div id="commandes-jour" class="text-3xl font-black text-green-700">0</div>
-        </div>
-
-        <div class="bg-white rounded-2xl p-5 shadow">
-          <div class="text-gray-400 text-sm">Produits actifs</div>
-          <div id="nb-produits" class="text-3xl font-black text-green-700">0</div>
-        </div>
-
-      </div>
-
-      <!-- PRODUITS -->
-      <div class="bg-white rounded-2xl p-5 shadow mb-8">
-
-        <h2 class="text-xl font-bold mb-4">
-          🍹 Produits
-        </h2>
-
-        <div id="liste-produits" class="space-y-3"></div>
-
-      </div>
-
-      <!-- COMMANDES -->
-      <div class="bg-white rounded-2xl p-5 shadow">
-
-        <h2 class="text-xl font-bold mb-4">
-          📦 Dernières commandes
-        </h2>
-
-        <div id="liste-commandes" class="space-y-3"></div>
-
-      </div>
-
-    </div>
+    <div id="products"></div>
 
   </div>
+
+  <!-- ================= COMMANDES ================= -->
+  <div class="bg-white p-4 rounded shadow">
+
+    <h2 class="text-xl font-bold mb-3">📦 Commandes</h2>
+
+    <!-- FILTER -->
+    <select onchange="load()" id="filter" class="border p-2 mb-3 rounded">
+      <option value="">Tous</option>
+      <option>En attente</option>
+      <option>Confirmée</option>
+      <option>Livrée</option>
+      <option>Annulée</option>
+    </select>
+
+    <div id="orders"></div>
+
+  </div>
+
+</div>
 
 <script>
 
-  // 🔥 TON API RAILWAY
-  const API = 'https://keur-ndeye-production-cb90.up.railway.app';
+const API = "https://keur-ndeye-production-cb90.up.railway.app";
 
-  // 🔐 MOT DE PASSE ADMIN
-  const PASSWORD = 'keur2025';
+/* ================= LOAD ================= */
 
-  // LOGIN
-  function login() {
+async function load(){
 
-    const mdp = document.getElementById('password').value;
+  const search = document.getElementById("search")?.value || "";
+  const filter = document.getElementById("filter")?.value || "";
 
-    if (mdp === PASSWORD) {
+  const products = await fetch(API+"/api/produits?search="+search)
+    .then(r=>r.json());
 
-      document.getElementById('login-page').classList.add('hidden');
+  const orders = await fetch(API+"/api/commandes?statut="+filter)
+    .then(r=>r.json());
 
-      document.getElementById('dashboard').classList.remove('hidden');
+  renderProducts(products);
+  renderOrders(orders);
+}
 
-      chargerDashboard();
+/* ================= PRODUITS ================= */
 
-    } else {
+function renderProducts(data){
 
-      alert('Mot de passe incorrect');
+  document.getElementById("products").innerHTML = data.map(p=>`
 
-    }
-  }
+    <div class="border p-3 flex justify-between items-center mb-2">
 
-  // LOGOUT
-  function logout() {
+      <div class="flex gap-3 items-center">
 
-    document.getElementById('dashboard').classList.add('hidden');
+        <img src="${p.image || ''}" class="w-12 h-12 object-cover rounded">
 
-    document.getElementById('login-page').classList.remove('hidden');
+        <div>
+          <b>${p.nom}</b><br>
+          <small>${p.categorie || ''}</small>
+        </div>
 
-    document.getElementById('password').value = '';
+      </div>
 
-  }
+      <div class="flex gap-2 items-center">
 
-  // CHARGER DASHBOARD
-  async function chargerDashboard() {
+        <span class="font-bold text-green-700">${p.prix} FCFA</span>
 
-    try {
+        <button onclick="editProduct('${p._id}')" class="bg-blue-500 text-white px-2 py-1 rounded">
+          Edit
+        </button>
 
-      // FETCH API
-      const produits = await fetch(API + '/api/produits')
-  .then(res => res.json());
+        <button onclick="deleteProduct('${p._id}')" class="bg-red-500 text-white px-2 py-1 rounded">
+          Sup
+        </button>
 
-const commandes = await fetch(API + '/api/commandes')
-  .then(res => res.json());
-      
-      console.log('Produits:', produits);
-      console.log('Commandes:', commandes);
+      </div>
 
-      // STATS
-      document.getElementById('nb-produits').textContent =
-        produits.length;
+    </div>
 
-      document.getElementById('total-commandes').textContent =
-        commandes.length;
+  `).join('');
+}
 
-      const aujourdHui = new Date().toDateString();
+/* ADD PRODUCT */
 
-      const commandesJour = commandes.filter(c => {
+async function addProduct(){
 
-        if (!c.date) return false;
+  await fetch(API+"/api/produits",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      nom: nom.value,
+      prix: prix.value,
+      categorie: categorie.value,
+      image: image.value
+    })
+  });
 
-        return new Date(c.date).toDateString() === aujourdHui;
+  nom.value = "";
+  prix.value = "";
+  categorie.value = "";
+  image.value = "";
 
-      });
+  load();
+}
 
-      document.getElementById('commandes-jour').textContent =
-        commandesJour.length;
+/* DELETE */
 
-      // LISTE PRODUITS
-      document.getElementById('liste-produits').innerHTML =
+async function deleteProduct(id){
+  await fetch(API+"/api/produits/"+id,{ method:"DELETE" });
+  load();
+}
 
-        produits.map(p => `
+/* EDIT SIMPLE */
 
-          <div class="flex justify-between items-center border-b pb-3">
+async function editProduct(id){
 
-            <div>
+  const newName = prompt("Nouveau nom ?");
+  const newPrice = prompt("Nouveau prix ?");
 
-              <div class="font-bold text-lg">
-                ${p.nom || 'Produit'}
-              </div>
+  if(!newName || !newPrice) return;
 
-              <div class="text-sm text-gray-500">
-                ${p.categorie || ''}
-              </div>
+  await fetch(API+"/api/produits/"+id,{
+    method:"PUT",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({
+      nom: newName,
+      prix: newPrice
+    })
+  });
 
-            </div>
+  load();
+}
 
-            <div class="text-green-700 font-bold text-lg">
-              ${(p.prix || 0).toLocaleString()} FCFA
-            </div>
+/* ================= COMMANDES ================= */
 
-          </div>
+function renderOrders(data){
 
-        `).join('');
+  document.getElementById("orders").innerHTML = data.map(c=>`
 
-      // LISTE COMMANDES
-      document.getElementById('liste-commandes').innerHTML =
+    <div class="border p-3 mb-2">
 
-        commandes.slice(0, 10).map(c => `
+      <div class="font-bold">
+        ${c.client?.nom || "Client"}
+      </div>
 
-          <div class="border-b pb-4">
+      <div class="text-sm text-gray-500">
+        ${(c.articles || []).map(a=>a.nom).join(", ")}
+      </div>
 
-            <div class="font-bold text-lg">
-              ${c.client?.nom || 'Client'}
-            </div>
+      <div class="flex justify-between items-center mt-2">
 
-            <div class="text-sm text-gray-500 mb-2">
-              ${c.articles?.map(a => a.nom).join(', ') || ''}
-            </div>
+        <div class="font-bold text-green-700">
+          ${c.total} FCFA
+        </div>
 
-            <div class="flex justify-between items-center">
+        <select onchange="updateStatus('${c._id}',this.value)" class="border p-1 rounded">
+          <option ${c.statut=="En attente"?"selected":""}>En attente</option>
+          <option ${c.statut=="Confirmée"?"selected":""}>Confirmée</option>
+          <option ${c.statut=="Livrée"?"selected":""}>Livrée</option>
+          <option ${c.statut=="Annulée"?"selected":""}>Annulée</option>
+        </select>
 
-              <div class="text-green-700 font-bold">
-                ${(c.total || 0).toLocaleString()} FCFA
-              </div>
+        <button onclick="deleteOrder('${c._id}')" class="bg-red-500 text-white px-2 py-1 rounded">
+          Sup
+        </button>
 
-              <div class="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full">
-                ${c.statut || 'En attente'}
-              </div>
+      </div>
 
-            </div>
+    </div>
 
-          </div>
+  `).join('');
+}
 
-        `).join('');
+/* UPDATE STATUS */
 
-    } catch (err) {
+async function updateStatus(id,status){
 
-      console.error(err);
+  await fetch(API+"/api/commandes/"+id,{
+    method:"PUT",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify({ statut: status })
+  });
 
-      alert('❌ Erreur connexion API');
+}
 
-    }
-  }
+/* DELETE ORDER */
+
+async function deleteOrder(id){
+  await fetch(API+"/api/commandes/"+id,{ method:"DELETE" });
+  load();
+}
+
+/* INIT */
+
+load();
 
 </script>
 

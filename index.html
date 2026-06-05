@@ -42,41 +42,7 @@
 
 
 <script>
-  (function() {
-    // ==================== BASE DE DONNÉES COMPLÈTE ====================
-    const DB = {
-      jus15L: [
-        { id:"j1",  nom:"Bissap Rouge",    volume:"1,5L", prix:2000, img:"https://i.postimg.cc/VdHK7w4x/bissap.png" },
-        { id:"j2",  nom:"Gingembre",       volume:"1,5L", prix:2000, img:"https://i.postimg.cc/872tSb21/gingembre.png" },
-        { id:"j3",  nom:"Ananas",          volume:"1,5L", prix:2000, img:"https://i.postimg.cc/2bFHTBXm/ananas.png" },
-        { id:"j4",  nom:"Orange",          volume:"1,5L", prix:2000, img:"https://i.postimg.cc/FYMD4xM1/orange.png" },
-        { id:"j5",  nom:"Bouye Nature",    volume:"1,5L", prix:2000, img:"https://i.postimg.cc/tsZ2wcmv/bouye-nature.png" },
-        { id:"j6",  nom:"Bouye Fraise",    volume:"1,5L", prix:2000, img:"https://i.postimg.cc/HrcBRNP6/bouye-fraise.png" },
-        { id:"j7",  nom:"Bouye Caressole", volume:"1,5L", prix:2500, img:"https://i.postimg.cc/CzqQ2pgD/jue-bouye-caressole.jpg" },
-      ],
-      jus1L: [
-        { id:"j8",  nom:"Bissap Rouge",  volume:"1L", prix:1500, img:"https://i.postimg.cc/VdHK7w4x/bissap.png" },
-        { id:"j9",  nom:"Bissap Blanc",  volume:"1L", prix:1500, img:"https://i.postimg.cc/GHSXMRzX/bissap-BLACC.png" },
-        { id:"j10", nom:"Ananas",        volume:"1L", prix:1500, img:"https://i.postimg.cc/2bFHTBXm/ananas.png" },
-        { id:"j11", nom:"Orange",        volume:"1L", prix:1500, img:"https://i.postimg.cc/FYMD4xM1/orange.png" },
-        { id:"j12", nom:"Bouye Nature",  volume:"1L", prix:1500, img:"https://i.postimg.cc/tsZ2wcmv/bouye-nature.png" },
-        { id:"j13", nom:"Bouye Fraise",  volume:"1L", prix:1500, img:"https://i.postimg.cc/HrcBRNP6/bouye-fraise.png" },
-        { id:"j14", nom:"Gingembre",     volume:"1L", prix:1500, img:"https://i.postimg.cc/872tSb21/gingembre.png" },
-      ],
-      parfums: [
-        { id:"p1",  nom:"Royal Oud",     prix:20000, img:"https://i.postimg.cc/KRMHWh25/Oud-royal.jpg" },
-        { id:"p2",  nom:"Amber Night",   prix:15000, img:"https://i.postimg.cc/w7mGrYp1/Amber-night.jpg" },
-        { id:"p3",  nom:"Black Musk",    prix:15000, img:"https://i.postimg.cc/rKrPH2kR/Black-Musk.jpg" },
-        { id:"p4",  nom:"Golden Oud",    prix:20000, img:"https://i.postimg.cc/QHTyzZ3T/Golden-oud.jpg" },
-        { id:"p5",  nom:"White Musk",    prix:25000, img:"https://i.postimg.cc/ZCdMQzSw/white-Musk.jpg" },
-        { id:"p6",  nom:"Luxury Rose",   prix:20000, img:"https://i.postimg.cc/vcVNKws5/luxury-rose.jpg" },
-        { id:"p7",  nom:"Royal Gold",    prix:20000, img:"https://i.postimg.cc/zVgcQYrj/royal-Gold.jpg" },
-        { id:"p8",  nom:"Night Secret",  prix:25000, img:"https://i.postimg.cc/0bwB41sp/night-secret.jpg" },
-        { id:"p9",  nom:"Arabian Dream", prix:15000, img:"https://i.postimg.cc/dLyxfcYT/arabian-dream.jpg" },
-        { id:"p10", nom:"Luxury Oud",    prix:25000, img:"https://i.postimg.cc/XpCzP6bd/luxury-oud.jpg" },
-      ]
-    };
-
+ 
     // ==================== GESTION DU PANIER  ====================
     let panier = [];
     try {
@@ -297,15 +263,67 @@ function carteProduit(p, detailLabel) {
     window.commanderWhatsapp = commanderWhatsapp;
 
     // ==================== INITIALISATION ====================
-    document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("grille-jus15").innerHTML = DB.jus15L.map(p => carteProduit(p, p.volume)).join("");
-      document.getElementById("grille-jus1").innerHTML = DB.jus1L.map(p => carteProduit(p, p.volume)).join("");
-      document.getElementById("grille-parfums").innerHTML = DB.parfums.map(p => carteProduit(p, "Disponible sur commande")).join("");
+      async function chargerProduits() {
 
-      mettreAJourUI();
+  const produits = await fetch(
+    "https://keur-ndeye-production-cb90.up.railway.app/api/produits"
+  ).then(r => r.json());
 
-      document.getElementById("overlay-panier").addEventListener("click", fermerPanier);
-    });
+  const jus15 = produits.filter(p => p.categorie === "jus15L");
+  const jus1 = produits.filter(p => p.categorie === "jus1L");
+  const parfums = produits.filter(p => p.categorie === "parfums");
+
+  document.getElementById("grille-jus15").innerHTML =
+    jus15.map(p =>
+      carteProduit(
+        {
+          id: p._id,
+          nom: p.nom,
+          prix: Number(p.prix),
+          img: p.image
+        },
+        p.volume
+      )
+    ).join("");
+
+  document.getElementById("grille-jus1").innerHTML =
+    jus1.map(p =>
+      carteProduit(
+        {
+          id: p._id,
+          nom: p.nom,
+          prix: Number(p.prix),
+          img: p.image
+        },
+        p.volume
+      )
+    ).join("");
+
+  document.getElementById("grille-parfums").innerHTML =
+    parfums.map(p =>
+      carteProduit(
+        {
+          id: p._id,
+          nom: p.nom,
+          prix: Number(p.prix),
+          img: p.image
+        },
+        "Disponible"
+      )
+    ).join("");
+}
+    document.addEventListener("DOMContentLoaded", async () => {
+
+  await chargerProduits();
+
+  mettreAJourUI();
+
+  document
+    .getElementById("overlay-panier")
+    .addEventListener("click", fermerPanier);
+
+}); 
+    
   })();
 </script>
 

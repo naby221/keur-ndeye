@@ -42,8 +42,13 @@
 
 
 <script>
- 
+    const DB = {
+  jus15L: [],
+  jus1L: [],
+  parfums: []
+};
     // ==================== GESTION DU PANIER  ====================
+    
     let panier = [];
     try {
       panier = JSON.parse(localStorage.getItem("keur-ndaay-panier") || "[]");

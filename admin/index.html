@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Admin - Keur Ndaay</title>
+<title> Keur Ndaay</title>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
@@ -19,13 +19,12 @@
   <!-- ================= PRODUITS ================= -->
   <div class="bg-white p-4 rounded shadow mb-6">
 
-    <h2 class="text-xl font-bold mb-3">🍹 Produits</h2>
+    <h2 class="text-xl font-bold mb-3"> Produits</h2>
 
-    <!-- SEARCH -->
-    <input id="search" oninput="load()" placeholder="Rechercher produit..."
-      class="border p-2 w-full mb-3 rounded">
+    
+   
 
-    <!-- ADD PRODUCT -->
+    <!-- ajouter PROduit -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4">
 
       <input id="nom" placeholder="Nom" class="border p-2 rounded">
@@ -71,7 +70,7 @@ const API = "https://keur-ndeye-production-cb90.up.railway.app";
 
 async function load(){
 
-  const search = document.getElementById("search")?.value || "";
+ 
   const filter = document.getElementById("filter")?.value || "";
 
   const products = await fetch(API+"/api/produits?search="+search)
@@ -108,11 +107,11 @@ function renderProducts(data){
         <span class="font-bold text-green-700">${p.prix} FCFA</span>
 
         <button onclick="editProduct('${p._id}')" class="bg-blue-500 text-white px-2 py-1 rounded">
-          Edit
+          Modifier
         </button>
 
         <button onclick="deleteProduct('${p._id}')" class="bg-red-500 text-white px-2 py-1 rounded">
-          Sup
+          Supprimer
         </button>
 
       </div>
@@ -174,43 +173,27 @@ async function editProduct(id){
 }
 
 /* ================= COMMANDES ================= */
-
 function renderOrders(data){
-
-  document.getElementById("orders").innerHTML = data.map(c=>`
-
-    <div class="border p-3 mb-2">
-
-      <div class="font-bold">
-        ${c.client?.nom || "Client"}
-      </div>
-
-      <div class="text-sm text-gray-500">
-        ${(c.articles || []).map(a=>a.nom).join(", ")}
-      </div>
-
-      <div class="flex justify-between items-center mt-2">
-
-        <div class="font-bold text-green-700">
-          ${c.total} FCFA
-        </div>
-
-        <select onchange="updateStatus('${c._id}',this.value)" class="border p-1 rounded">
-          <option ${c.statut=="En attente"?"selected":""}>En attente</option>
-          <option ${c.statut=="Confirmée"?"selected":""}>Confirmée</option>
-          <option ${c.statut=="Livrée"?"selected":""}>Livrée</option>
-          <option ${c.statut=="Annulée"?"selected":""}>Annulée</option>
-        </select>
-
-        <button onclick="deleteOrder('${c._id}')" class="bg-red-500 text-white px-2 py-1 rounded">
-          Sup
-        </button>
-
-      </div>
-
-    </div>
-
-  `).join('');
+ document.getElementById("orders").innerHTML=data.map(c=>`
+ <tr>
+   <td class="border p-2">${c.client?.nom||''}</td>
+   <td class="border p-2">${c.client?.telephone||''}</td>
+   <td class="border p-2">${c.client?.adresse||''}</td>
+   <td class="border p-2">${(c.articles||[]).map(a=>a.nom+" x"+a.qte).join("<br>")}</td>
+   <td class="border p-2">${c.total}</td>
+   <td class="border p-2">
+      <select onchange="updateStatus('${c._id}',this.value)">
+        <option ${c.statut=="Nouvelle"?"selected":""}>Nouvelle</option>
+        <option ${c.statut=="Confirmée"?"selected":""}>Confirmée</option>
+        <option ${c.statut=="Livrée"?"selected":""}>Livrée</option>
+        <option ${c.statut=="Annulée"?"selected":""}>Annulée</option>
+      </select>
+   </td>
+   <td class="border p-2">${new Date(c.date).toLocaleString()}</td>
+   <td class="border p-2">
+      <button onclick="deleteOrder('${c._id}')" class="bg-red-500 text-white px-2 py-1 rounded">Supprimer</button>
+   </td>
+ </tr>`).join('');
 }
 
 /* UPDATE STATUS */

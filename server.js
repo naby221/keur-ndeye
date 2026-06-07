@@ -47,16 +47,28 @@ app.get('/', (req, res) => {
 // Voir tous les produits
 app.get('/api/produits', async (req, res) => {
   try {
-    const produits = await Produit.find();
+
+    const search = req.query.search || '';
+
+    const produits = await Produit.find({
+      nom: {
+        $regex: search,
+        $options: 'i'
+      }
+    });
+
     res.json(produits);
+
   } catch (err) {
+
     console.log(err);
+
     res.status(500).json({
       message: 'Erreur serveur'
     });
+
   }
 });
-
 // Ajouter un produit
 app.post('/api/produits', async (req, res) => {
   try {
@@ -125,20 +137,30 @@ app.delete('/api/produits/:id', async (req, res) => {
 // Voir toutes les commandes
 app.get('/api/commandes', async (req, res) => {
   try {
-    const commandes = await Commande.find().sort({
-      date: -1
-    });
+
+    const statut = req.query.statut;
+
+    let filtre = {};
+
+    if (statut) {
+      filtre.statut = statut;
+    }
+
+    const commandes = await Commande.find(filtre)
+      .sort({ date: -1 });
 
     res.json(commandes);
+
   } catch (err) {
+
     console.log(err);
 
     res.status(500).json({
       message: 'Erreur serveur'
     });
+
   }
 });
-
 // Ajouter une commande
 app.post('/api/commandes', async (req, res) => {
   try {

@@ -1,64 +1,121 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title> Keur Ndaay</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Administration Keur Ndaay</title>
 <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
 <body class="bg-gray-100">
 
-<div class="max-w-6xl mx-auto p-6">
+<div class="max-w-7xl mx-auto p-6">
 
-  <!-- HEADER -->
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-bold"> dashboard</h1>
+<!-- HEADER -->
+<div class="flex justify-between items-center mb-6">
+
+  <div>
+    <h1 class="text-3xl font-bold text-green-700">
+      🛒 Administration Keur Ndaay
+    </h1>
+
+    <p class="text-gray-500">
+      Gestion des produits et commandes
+    </p>
   </div>
 
-  <!-- ================= PRODUITS ================= -->
-  <div class="bg-white p-4 rounded shadow mb-6">
+</div>
 
-    <h2 class="text-xl font-bold mb-3"> Produits</h2>
+<!-- STATISTIQUES -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
 
-    
-   
+  <div class="bg-white p-5 rounded-xl shadow">
+    <div class="text-gray-500">Produits</div>
+    <div id="stat-produits" class="text-3xl font-bold text-green-700">0</div>
+  </div>
 
-    <!-- ajouter PROduit -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-4">
+  <div class="bg-white p-5 rounded-xl shadow">
+    <div class="text-gray-500">Commandes</div>
+    <div id="stat-commandes" class="text-3xl font-bold text-blue-700">0</div>
+  </div>
 
-      <input id="nom" placeholder="Nom" class="border p-2 rounded">
-      <input id="prix" placeholder="Prix" class="border p-2 rounded">
-      <input id="categorie" placeholder="Catégorie" class="border p-2 rounded">
-      <input id="image" placeholder="URL Image" class="border p-2 rounded">
+  <div class="bg-white p-5 rounded-xl shadow">
+    <div class="text-gray-500">Chiffre d'affaires</div>
+    <div id="stat-ca" class="text-3xl font-bold text-red-700">0 FCFA</div>
+  </div>
 
-      <button onclick="addProduct()" class="bg-green-600 text-white rounded p-2">
-        Ajouter
-      </button>
+</div>
 
-    </div>
+<!-- PRODUITS -->
+<div class="bg-white rounded-xl shadow p-5 mb-6">
 
-    <div id="products"></div>
+  <div class="flex justify-between items-center mb-4">
+
+    <h2 class="text-xl font-bold">
+      🍹 Gestion des produits
+    </h2>
+
+    <input
+      id="search"
+      oninput="load()"
+      placeholder="Rechercher un produit..."
+      class="border rounded-lg p-2 w-64"
+    >
 
   </div>
 
-  <!-- ================= COMMANDES ================= -->
-  <div class="bg-white p-4 rounded shadow">
+  <!-- FORMULAIRE -->
+  <div class="grid md:grid-cols-5 gap-2 mb-5">
 
-    <h2 class="text-xl font-bold mb-3"> Commandes</h2>
+    <input id="nom" placeholder="Nom" class="border p-2 rounded">
 
-    <!-- FILTER -->
-    <select onchange="load()" id="filter" class="border p-2 mb-3 rounded">
-      <option value="">Tous</option>
+    <input id="prix" placeholder="Prix" class="border p-2 rounded">
+
+    <input id="categorie" placeholder="Catégorie" class="border p-2 rounded">
+
+    <input id="volume" placeholder="Volume" class="border p-2 rounded">
+
+    <input id="image" placeholder="URL image" class="border p-2 rounded">
+
+  </div>
+
+  <button
+    onclick="addProduct()"
+    class="bg-green-600 text-white px-4 py-2 rounded-lg mb-5"
+  >
+    ➕ Ajouter le produit
+  </button>
+
+  <div id="products"></div>
+
+</div>
+
+<!-- COMMANDES -->
+<div class="bg-white rounded-xl shadow p-5">
+
+  <div class="flex justify-between items-center mb-4">
+
+    <h2 class="text-xl font-bold">
+      📦 Gestion des commandes
+    </h2>
+
+    <select
+      id="filter"
+      onchange="load()"
+      class="border rounded-lg p-2"
+    >
+      <option value="">Toutes les commandes</option>
       <option>En attente</option>
       <option>Confirmée</option>
       <option>Livrée</option>
       <option>Annulée</option>
     </select>
 
-    <div id="orders"></div>
-
   </div>
+
+  <div id="orders"></div>
+
+</div>
 
 </div>
 
@@ -66,175 +123,435 @@
 
 const API = "https://keur-ndeye-production-cb90.up.railway.app";
 
-/* ================= LOAD ================= */
+let commandesGlobales = [];
 
 async function load(){
 
- 
-  const filter = document.getElementById("filter")?.value || "";
+  const search =
+    document.getElementById('search').value || '';
 
-  const products = await fetch(API+"/api/produits?search="+search)
-    .then(r=>r.json());
+  const filter =
+    document.getElementById('filter').value || '';
 
-  const orders = await fetch(API+"/api/commandes?statut="+filter)
-    .then(r=>r.json());
+  const products =
+    await fetch(API + '/api/produits?search=' + search)
+    .then(r => r.json());
+
+  const orders =
+    await fetch(API + '/api/commandes?statut=' + filter)
+    .then(r => r.json());
+
+  commandesGlobales = orders;
+
+  document.getElementById('stat-produits').textContent =
+    products.length;
+
+  document.getElementById('stat-commandes').textContent =
+    orders.length;
+
+  let totalCA = 0;
+
+  orders.forEach(c => {
+    totalCA += Number(c.total || 0);
+  });
+
+  document.getElementById('stat-ca').textContent =
+    totalCA.toLocaleString() + ' FCFA';
 
   renderProducts(products);
   renderOrders(orders);
-}
 
-/* ================= PRODUITS ================= */
+}
 
 function renderProducts(data){
 
-  document.getElementById("products").innerHTML = data.map(p=>`
+  document.getElementById('products').innerHTML =
+    data.map(p => `
 
-    <div class="border p-3 flex justify-between items-center mb-2">
+      <div class="border rounded-xl p-4 mb-3 flex justify-between items-center">
 
-      <div class="flex gap-3 items-center">
+        <div class="flex items-center gap-4">
 
-        <img src="${p.image || ''}" class="w-12 h-12 object-cover rounded">
+          <img
+            src="${p.image}"
+            class="w-16 h-16 object-cover rounded"
+          >
 
-        <div>
-          <b>${p.nom}</b><br>
-          <small>${p.categorie || ''}</small>
+          <div>
+
+            <div class="font-bold text-lg">
+              ${p.nom}
+            </div>
+
+            <div class="text-gray-500">
+              ${p.categorie}
+            </div>
+
+            <div class="text-gray-500">
+              ${p.volume || ''}
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="text-right">
+
+          <div class="font-bold text-green-700 mb-2">
+            ${Number(p.prix).toLocaleString()} FCFA
+          </div>
+
+          <button
+            onclick="editProduct('${p._id}')"
+            class="bg-blue-500 text-white px-3 py-1 rounded"
+          >
+            Modifier
+          </button>
+
+          <button
+            onclick="deleteProduct('${p._id}')"
+            class="bg-red-500 text-white px-3 py-1 rounded"
+          >
+            Supprimer
+          </button>
+
         </div>
 
       </div>
 
-      <div class="flex gap-2 items-center">
+    `).join('');
 
-        <span class="font-bold text-green-700">${p.prix} FCFA</span>
-
-        <button onclick="editProduct('${p._id}')" class="bg-blue-500 text-white px-2 py-1 rounded">
-          Modifier
-        </button>
-
-        <button onclick="deleteProduct('${p._id}')" class="bg-red-500 text-white px-2 py-1 rounded">
-          Supprimer
-        </button>
-
-      </div>
-
-    </div>
-
-  `).join('');
 }
-
-/* ADD PRODUCT */
 
 async function addProduct(){
 
-  await fetch(API+"/api/produits",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
+  await fetch(API + '/api/produits', {
+
+    method:'POST',
+
+    headers:{
+      'Content-Type':'application/json'
+    },
+
     body: JSON.stringify({
+
       nom: nom.value,
       prix: prix.value,
       categorie: categorie.value,
-      image: image.value
+      volume: volume.value,
+      image: image.value,
+      actif: true
+
     })
+
   });
 
-  nom.value = "";
-  prix.value = "";
-  categorie.value = "";
-  image.value = "";
-
   load();
-}
 
-/* DELETE */
+}
 
 async function deleteProduct(id){
-  await fetch(API+"/api/produits/"+id,{ method:"DELETE" });
-  load();
-}
 
-/* EDIT SIMPLE */
+  if(!confirm('Supprimer ce produit ?'))
+    return;
+
+  await fetch(API + '/api/produits/' + id,{
+    method:'DELETE'
+  });
+
+  load();
+
+}
 
 async function editProduct(id){
 
-  const newName = prompt("Nouveau nom ?");
-  const newPrice = prompt("Nouveau prix ?");
+  const nomProduit =
+    prompt('Nouveau nom ?');
 
-  if(!newName || !newPrice) return;
+  const prixProduit =
+    prompt('Nouveau prix ?');
 
-  await fetch(API+"/api/produits/"+id,{
-    method:"PUT",
-    headers:{ "Content-Type":"application/json" },
+  if(!nomProduit || !prixProduit)
+    return;
+
+  await fetch(API + '/api/produits/' + id,{
+
+    method:'PUT',
+
+    headers:{
+      'Content-Type':'application/json'
+    },
+
     body: JSON.stringify({
-      nom: newName,
-      prix: newPrice
+      nom: nomProduit,
+      prix: prixProduit
     })
+
   });
 
   load();
+
 }
 
-/* ================= COMMANDES ================= */
-function renderOrders(data){
+  function renderOrders(data){
 
-  document.getElementById("orders").innerHTML = data.map(c=>`
+  document.getElementById('orders').innerHTML =
+    data.map(c => `
 
-    <div class="border p-3 mb-2">
+      <div class="border rounded-xl p-4 mb-3">
 
-      <div class="font-bold">
-        ${c.client?.nom || "Client"}
-      </div>
+        <div class="flex justify-between items-center">
 
-      <div class="text-sm text-gray-500">
-        ${(c.articles || []).map(a=>a.nom).join(", ")}
-      </div>
+          <div>
 
-      <div class="flex justify-between items-center mt-2">
+            <div class="font-bold text-lg">
+              👤 ${c.client?.nom || 'Client'}
+            </div>
 
-        <div class="font-bold text-green-700">
-          ${c.total} FCFA
+            <div class="text-gray-500">
+              📞 ${c.client?.telephone || '-'}
+            </div>
+
+            <div class="text-gray-500">
+              📍 ${c.client?.adresse || '-'}
+            </div>
+
+            <div class="text-gray-400 text-sm">
+              🗓️ ${new Date(c.date).toLocaleString('fr-FR')}
+            </div>
+
+          </div>
+
+          <div class="text-right">
+
+            <div class="font-bold text-green-700 mb-2">
+              ${Number(c.total || 0).toLocaleString()} FCFA
+            </div>
+
+            <button
+              onclick="voirCommande('${c._id}')"
+              class="bg-blue-600 text-white px-3 py-1 rounded"
+            >
+              Voir détails
+            </button>
+
+          </div>
+
         </div>
 
-        <select onchange="updateStatus('${c._id}',this.value)" class="border p-1 rounded">
-          <option ${c.statut=="En attente"?"selected":""}>En attente</option>
-          <option ${c.statut=="Confirmée"?"selected":""}>Confirmée</option>
-          <option ${c.statut=="Livrée"?"selected":""}>Livrée</option>
-          <option ${c.statut=="Annulée"?"selected":""}>Annulée</option>
-        </select>
+      </div>
 
-        <button onclick="deleteOrder('${c._id}')" class="bg-red-500 text-white px-2 py-1 rounded">
-          Supprimer
-        </button>
+    `).join('');
 
+}
+
+function voirCommande(id){
+
+  const commande =
+    commandesGlobales.find(c => c._id === id);
+
+  if(!commande) return;
+
+  let articlesHTML = '';
+
+  commande.articles.forEach(article => {
+
+    articlesHTML += `
+
+      <div class="border rounded-lg p-3 mb-2 flex gap-3">
+
+        <img
+          src="${article.img}"
+          class="w-16 h-16 object-cover rounded"
+        >
+
+        <div>
+
+          <div class="font-bold">
+            ${article.nom}
+          </div>
+
+          <div>
+            Quantité : ${article.qte}
+          </div>
+
+          <div>
+            ${Number(article.prix).toLocaleString()} FCFA
+          </div>
+
+          <div>
+            ${article.detail || ''}
+          </div>
+
+        </div>
+
+      </div>
+
+    `;
+
+  });
+
+  document.getElementById('modal-content').innerHTML = `
+
+    <h2 class="text-2xl font-bold mb-4">
+      📦 Détails de la commande
+    </h2>
+
+    <div class="mb-4">
+
+      <div>
+        <strong>Nom :</strong>
+        ${commande.client.nom}
+      </div>
+
+      <div>
+        <strong>Téléphone :</strong>
+        ${commande.client.telephone}
+      </div>
+
+      <div>
+        <strong>Adresse :</strong>
+        ${commande.client.adresse}
+      </div>
+
+      <div>
+        <strong>Date :</strong>
+        ${new Date(commande.date)
+          .toLocaleString('fr-FR')}
       </div>
 
     </div>
 
-  `).join('');
+    <h3 class="font-bold mb-3">
+      Produits commandés
+    </h3>
+
+    ${articlesHTML}
+
+    <div class="mt-4">
+
+      <strong>Total :</strong>
+
+      ${Number(commande.total)
+        .toLocaleString()} FCFA
+
+    </div>
+
+    <div class="mt-4">
+
+      <select
+        onchange="updateStatus('${commande._id}',this.value)"
+        class="border p-2 rounded"
+      >
+
+        <option ${commande.statut==='En attente'?'selected':''}>
+          En attente
+        </option>
+
+        <option ${commande.statut==='Confirmée'?'selected':''}>
+          Confirmée
+        </option>
+
+        <option ${commande.statut==='Livrée'?'selected':''}>
+          Livrée
+        </option>
+
+        <option ${commande.statut==='Annulée'?'selected':''}>
+          Annulée
+        </option>
+
+      </select>
+
+      <button
+        onclick="deleteOrder('${commande._id}')"
+        class="bg-red-600 text-white px-3 py-2 rounded ml-2"
+      >
+        Supprimer la commande
+      </button>
+
+    </div>
+
+  `;
+
+  document
+    .getElementById('modal')
+    .classList.remove('hidden');
+
 }
 
-/* UPDATE STATUS */
+async function updateStatus(id, statut){
 
-async function updateStatus(id,status){
+  await fetch(API + '/api/commandes/' + id,{
 
-  await fetch(API+"/api/commandes/"+id,{
-    method:"PUT",
-    headers:{ "Content-Type":"application/json" },
-    body: JSON.stringify({ statut: status })
+    method:'PUT',
+
+    headers:{
+      'Content-Type':'application/json'
+    },
+
+    body: JSON.stringify({
+      statut
+    })
+
   });
 
-}
+  load();
 
-/* DELETE ORDER */
+}
 
 async function deleteOrder(id){
-  await fetch(API+"/api/commandes/"+id,{ method:"DELETE" });
-  load();
-}
 
-/* INIT */
+  if(!confirm(
+    'Supprimer cette commande ?'
+  )) return;
+
+  await fetch(
+    API + '/api/commandes/' + id,
+    {
+      method:'DELETE'
+    }
+  );
+
+  document
+    .getElementById('modal')
+    .classList.add('hidden');
+
+  load();
+
+}
 
 load();
 
 </script>
+
+<!-- FENÊTRE DÉTAIL COMMANDE -->
+<div
+  id="modal"
+  class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4"
+>
+
+  <div class="bg-white rounded-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-auto">
+
+    <div class="flex justify-between items-center mb-4">
+
+      <h2 class="font-bold text-xl">
+        Commande
+      </h2>
+
+      <button
+        onclick="document.getElementById('modal').classList.add('hidden')"
+        class="text-red-600 font-bold text-xl"
+      >
+        ✕
+      </button>
+
+    </div>
+
+    <div id="modal-content"></div>
+
+  </div>
+
+</div>
 
 </body>
 </html>
